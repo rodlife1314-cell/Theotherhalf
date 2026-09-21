@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   SimulationParameters,
   GeometryType,
@@ -23,6 +23,35 @@ import { LearningHelixKernel } from '@/components/LearningHelixKernel';
 import { DoctrineSpace } from '@/components/DoctrineSpace';
 import { OrbitalCorridorEnergySandbox } from '@/components/OrbitalCorridorEnergySandbox';
 import { SimonInferenceRegistryWorkbench } from '@/components/SimonInferenceRegistryWorkbench';
+import { GraphView } from '@/components/GraphView';
+import { CrystalBridgeView } from '@/components/CrystalBridgeView';
+import { EvidenceLedgerView } from '@/components/EvidenceLedgerView';
+import { OctagonGovernanceView } from '@/components/OctagonGovernanceView';
+import { RapidsCentralityView } from '@/components/RapidsCentralityView';
+import { TransactionGatesView } from '@/components/TransactionGatesView';
+import { IsolatedBacklogView } from '@/components/IsolatedBacklogView';
+import { NodeInspectorModal } from '@/components/NodeInspectorModal';
+import { GeometryBenchmarkView } from '@/components/GeometryBenchmarkView';
+import {
+  INITIAL_NODES,
+  INITIAL_EDGES,
+  INITIAL_EVIDENCE,
+  INITIAL_STOP_CONDITIONS,
+  INITIAL_AGENTS,
+} from '@/lib/data/initial-substrate';
+import {
+  calculatePageRank,
+  calculateBetweennessCentrality,
+  calculateDegreeCentrality,
+  auditStopConditions,
+} from '@/lib/graph-analytics';
+import {
+  SubstrateNode,
+  SubstrateEdge,
+  EvidenceBinding,
+  StopConditionAlert,
+  GuildAgent,
+} from '@/lib/types';
 import {
   calculateCCVTelemetry,
   CCVOperatingState,
@@ -53,6 +82,11 @@ import {
   GraduationCap,
   BookOpen,
   Satellite,
+  Share2,
+  Lock,
+  Award,
+  CheckCircle,
+  Database,
 } from 'lucide-react';
 
 export default function Page() {
@@ -83,6 +117,14 @@ export default function Page() {
     | 'parallel_cognition'
     | 'learning_helix'
     | 'doctrine'
+    | 'substrate_graph'
+    | 'crystal_bridge'
+    | 'evidence_ledger'
+    | 'octagon_governance'
+    | 'rapids_centrality'
+    | 'transaction_gates'
+    | 'isolated_backlog'
+    | 'geometry_benchmark'
     | 'workbench'
     | 'vessel_engine'
     | 'transport_medium'
@@ -92,6 +134,122 @@ export default function Page() {
     | 'comparative_lab'
     | 'formulations'
   >('orbital_energy');
+
+  // Substrate Sovereign State
+  const [nodes, setNodes] = useState<SubstrateNode[]>(INITIAL_NODES);
+  const [edges, setEdges] = useState<SubstrateEdge[]>(INITIAL_EDGES);
+  const [evidences, setEvidences] = useState<EvidenceBinding[]>(INITIAL_EVIDENCE);
+  const [alerts, setAlerts] = useState<StopConditionAlert[]>(INITIAL_STOP_CONDITIONS);
+  const [agents, setAgents] = useState<GuildAgent[]>(INITIAL_AGENTS);
+  const [selectedNode, setSelectedNode] = useState<SubstrateNode | null>(null);
+
+  const recalculateGraphAndAudit = useCallback(
+    (currentNodes: SubstrateNode[], currentEdges: SubstrateEdge[], currentEvidences: EvidenceBinding[]) => {
+      const pageRanks = calculatePageRank(currentNodes, currentEdges);
+      const betweenness = calculateBetweennessCentrality(currentNodes, currentEdges);
+      const degrees = calculateDegreeCentrality(currentNodes, currentEdges);
+
+      const updatedNodes = currentNodes.map(node => {
+        const pr = pageRanks[node.id] !== undefined ? pageRanks[node.id] : node.centrality.pageRank;
+        const bc = betweenness[node.id] !== undefined ? betweenness[node.id] : node.centrality.betweennessCentrality;
+        const deg = degrees[node.id] || { inDegree: 0, outDegree: 0, degree: 0 };
+        return {
+          ...node,
+          centrality: {
+            pageRank: pr,
+            betweennessCentrality: bc,
+            degreeCentrality: deg.degree,
+            inDegree: deg.inDegree,
+            outDegree: deg.outDegree,
+          },
+        };
+      });
+
+      const newAlerts = auditStopConditions(updatedNodes, currentEdges, currentEvidences);
+      setNodes(updatedNodes);
+      setAlerts(newAlerts);
+    },
+    []
+  );
+
+  const handleAddEdge = (newEdge: SubstrateEdge) => {
+    const nextEdges = [...edges, newEdge];
+    setEdges(nextEdges);
+    recalculateGraphAndAudit(nodes, nextEdges, evidences);
+  };
+
+  const handleAddEvidence = (newEv: EvidenceBinding) => {
+    const nextEvidences = [newEv, ...evidences];
+    setEvidences(nextEvidences);
+    recalculateGraphAndAudit(nodes, edges, nextEvidences);
+  };
+
+  const handleToggleDisputed = (evId: string) => {
+    const nextEvidences = evidences.map(e => {
+      if (e.id === evId) {
+        return { ...e, isDisputed: !e.isDisputed };
+      }
+      return e;
+    });
+    setEvidences(nextEvidences);
+    recalculateGraphAndAudit(nodes, edges, nextEvidences);
+  };
+
+  const handleResolveAlert = (alertId: string) => {
+    setAlerts(prev => prev.map(a => (a.id === alertId ? { ...a, resolved: true } : a)));
+  };
+
+  const handlePromoteNode = (nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return;
+    const targetId = node.universe === 'quantum' ? 'node-bluefors' : 'node-superpower';
+    const newEdge: SubstrateEdge = {
+      id: `edge-promoted-${Date.now()}`,
+      source: nodeId,
+      target: targetId,
+      relationshipType: 'CRITICAL_DEPENDENCY',
+      universeCross: false,
+      description: `Discovered procurement rail from ${node.label} to ${targetId === 'node-bluefors' ? 'BlueFors' : 'SuperPower'}.`,
+      evidenceId: 'EVD-ARPAE-HTS-2024',
+      weight: 4,
+      verified: true,
+      observationType: 'OBSERVATION',
+    };
+    const updatedNodes = nodes.map(n => {
+      if (n.id === nodeId) {
+        return { ...n, status: 'ACTIVE' as const };
+      }
+      return n;
+    });
+    const nextEdges = [...edges, newEdge];
+    setNodes(updatedNodes);
+    setEdges(nextEdges);
+    recalculateGraphAndAudit(updatedNodes, nextEdges, evidences);
+  };
+
+  const handlePromoteClaim = (nodeId: string, claimId: string, evidenceId: string) => {
+    const updatedNodes = nodes.map(n => {
+      if (n.id === nodeId) {
+        return {
+          ...n,
+          claims: n.claims.map(c => {
+            if (c.id === claimId) {
+              return {
+                ...c,
+                type: 'OBSERVATION' as const,
+                evidenceIds: [...c.evidenceIds, evidenceId],
+                approvedByOperator: true,
+              };
+            }
+            return c;
+          }),
+        };
+      }
+      return n;
+    });
+    setNodes(updatedNodes);
+    recalculateGraphAndAudit(updatedNodes, edges, evidences);
+  };
 
   // Shared CCV-01 Vehicle State for both CCV Studio and Pathfinder Cognitive Layer
   const [ccvOperatingState, setCcvOperatingState] = useState<CCVOperatingState>('cruise');
@@ -198,6 +356,144 @@ export default function Page() {
 
         {/* Row 2: Dedicated Horizontal Tab Navigation Bar (Never Wraps Onto Workspace) */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 text-xs font-mono border-t border-slate-800/80">
+          {/* SUBSTRATE SOVEREIGN MAP (QUANTUM UNIVERSE) */}
+          <button
+            id="nav-tab-substrate-graph"
+            onClick={() => setActiveTab('substrate_graph')}
+            className={`min-h-[44px] flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap shrink-0 ${
+              activeTab === 'substrate_graph'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-sm font-bold'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850 border border-transparent'
+            }`}
+          >
+            <Share2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span>Quantum Universe</span>
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-200 border border-amber-500/40 font-bold">
+              SUBSTRATE MAP
+            </span>
+          </button>
+
+          {/* CRYSTAL BRIDGE VIEW */}
+          <button
+            id="nav-tab-crystal-bridge"
+            onClick={() => setActiveTab('crystal_bridge')}
+            className={`min-h-[44px] flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap shrink-0 ${
+              activeTab === 'crystal_bridge'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm font-bold'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850 border border-transparent'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+            <span>Crystal Bridge</span>
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/30 text-cyan-200 border border-cyan-500/40 font-bold">
+              CROSS-SECTOR
+            </span>
+          </button>
+
+          {/* EVIDENCE LEDGER (AETHER) */}
+          <button
+            id="nav-tab-evidence-ledger"
+            onClick={() => setActiveTab('evidence_ledger')}
+            className={`min-h-[44px] flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap shrink-0 ${
+              activeTab === 'evidence_ledger'
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-sm font-bold'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850 border border-transparent'
+            }`}
+          >
+            <Database className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span>Evidence Ledger</span>
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 font-bold">
+              AETHER VAULT
+            </span>
+          </button>
+
+          {/* OCTAGON GOVERNANCE */}
+          <button
+            id="nav-tab-octagon-governance"
+            onClick={() => setActiveTab('octagon_governance')}
+            className={`min-h-[44px] flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap shrink-0 ${
+              activeTab === 'octagon_governance'
+                ? 'bg-red-500/20 text-red-300 border border-red-500/50 shadow-sm font-bold'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850 border border-transparent'
+            }`}
+          >
+            <ShieldAlert className="w-3.5 h-3.5 text-red-400 shrink-0" />
+            <span>Octagon Governance</span>
+            {alerts.filter(a => !a.resolved).length > 0 && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/30 text-red-200 border border-red-500/40 font-bold">
+                {alerts.filter(a => !a.resolved).length} ALERTS
+              </span>
+            )}
+          </button>
+
+          {/* RAPIDS CENTRALITY */}
+          <button
+            id="nav-tab-rapids-centrality"
+            onClick={() => setActiveTab('rapids_centrality')}
+            className={`min-h-[44px] flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap shrink-0 ${
+              activeTab === 'rapids_centrality'
+                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50 shadow-sm font-bold'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850 border border-transparent'
+            }`}
+          >
+            <Award className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+            <span>RAPIDS Lens</span>
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/30 text-purple-200 border border-purple-500/40">
+              CENTRALITY
+            </span>
+          </button>
+
+          {/* TRANSACTION GATES */}
+          <button
+            id="nav-tab-transaction-gates"
+            onClick={() => setActiveTab('transaction_gates')}
+            className={`min-h-[44px] flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap shrink-0 ${
+              activeTab === 'transaction_gates'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-sm font-bold'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850 border border-transparent'
+            }`}
+          >
+            <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span>Transaction Gates</span>
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-200 border border-amber-500/40">
+              DE-SPAC
+            </span>
+          </button>
+
+          {/* GEOMETRY BENCHMARK SUITE */}
+          <button
+            id="nav-tab-geometry-benchmark"
+            onClick={() => setActiveTab('geometry_benchmark')}
+            className={`min-h-[44px] flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap shrink-0 ${
+              activeTab === 'geometry_benchmark'
+                ? 'bg-teal-500/20 text-teal-300 border border-teal-500/50 shadow-sm font-bold'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850 border border-transparent'
+            }`}
+          >
+            <Activity className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+            <span>G_n Benchmark</span>
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-teal-500/30 text-teal-200 border border-teal-500/40">
+              G3...G∞
+            </span>
+          </button>
+
+          {/* ISOLATED BACKLOG */}
+          <button
+            id="nav-tab-isolated-backlog"
+            onClick={() => setActiveTab('isolated_backlog')}
+            className={`min-h-[44px] flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium transition-all whitespace-nowrap shrink-0 ${
+              activeTab === 'isolated_backlog'
+                ? 'bg-zinc-500/20 text-zinc-300 border border-zinc-500/50 shadow-sm font-bold'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850 border border-transparent'
+            }`}
+          >
+            <CheckCircle className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+            <span>Isolated Backlog</span>
+          </button>
+
+          {/* Separator */}
+          <div className="h-6 w-px bg-slate-800 shrink-0 mx-1" />
+
           {/* ORBITAL CORRIDOR ENERGY NETWORK & RESONANT COUPLING */}
           <button
             id="nav-tab-orbital-energy"
@@ -429,6 +725,95 @@ export default function Page() {
 
       {/* Main App Content Body - Fluid, non-clipped */}
       <div className="flex-1 w-full max-w-[1720px] mx-auto p-3 sm:p-4 flex flex-col gap-4">
+        {/* VIEW: SOVEREIGN SUBSTRATE GRAPH (QUANTUM UNIVERSE) */}
+        {activeTab === 'substrate_graph' && (
+          <div className="flex-1 min-h-[640px]">
+            <GraphView
+              nodes={nodes}
+              edges={edges}
+              evidences={evidences}
+              selectedNode={selectedNode}
+              onSelectNode={setSelectedNode}
+              onAddEdge={handleAddEdge}
+            />
+          </div>
+        )}
+
+        {/* VIEW: CRYSTAL BRIDGE */}
+        {activeTab === 'crystal_bridge' && (
+          <div className="flex-1 min-h-[640px]">
+            <CrystalBridgeView
+              nodes={nodes}
+              edges={edges}
+              evidences={evidences}
+              onSelectNode={setSelectedNode}
+            />
+          </div>
+        )}
+
+        {/* VIEW: EVIDENCE LEDGER (AETHER VAULT) */}
+        {activeTab === 'evidence_ledger' && (
+          <div className="flex-1 min-h-[640px]">
+            <EvidenceLedgerView
+              evidences={evidences}
+              onAddEvidence={handleAddEvidence}
+              onToggleDisputed={handleToggleDisputed}
+            />
+          </div>
+        )}
+
+        {/* VIEW: OCTAGON GOVERNANCE */}
+        {activeTab === 'octagon_governance' && (
+          <div className="flex-1 min-h-[640px]">
+            <OctagonGovernanceView
+              alerts={alerts}
+              agents={agents}
+              onResolveAlert={handleResolveAlert}
+              onTriggerAuditSweep={() => recalculateGraphAndAudit(nodes, edges, evidences)}
+            />
+          </div>
+        )}
+
+        {/* VIEW: RAPIDS CENTRALITY */}
+        {activeTab === 'rapids_centrality' && (
+          <div className="flex-1 min-h-[640px]">
+            <RapidsCentralityView
+              nodes={nodes}
+              onSelectNode={setSelectedNode}
+            />
+          </div>
+        )}
+
+        {/* VIEW: TRANSACTION GATES */}
+        {activeTab === 'transaction_gates' && (
+          <div className="flex-1 min-h-[640px]">
+            <TransactionGatesView
+              nodes={nodes}
+              evidences={evidences}
+              onSelectNode={setSelectedNode}
+            />
+          </div>
+        )}
+
+        {/* VIEW: GEOMETRY BENCHMARK */}
+        {activeTab === 'geometry_benchmark' && (
+          <div className="flex-1 min-h-[640px]">
+            <GeometryBenchmarkView />
+          </div>
+        )}
+
+        {/* VIEW: ISOLATED BACKLOG */}
+        {activeTab === 'isolated_backlog' && (
+          <div className="flex-1 min-h-[640px]">
+            <IsolatedBacklogView
+              nodes={nodes}
+              evidences={evidences}
+              onSelectNode={setSelectedNode}
+              onPromoteNode={handlePromoteNode}
+            />
+          </div>
+        )}
+
         {/* VIEW: ORBITAL CORRIDOR ENERGY NETWORK & RESONANT COUPLING SANDBOX */}
         {activeTab === 'orbital_energy' && (
           <div className="flex-1">
@@ -707,6 +1092,15 @@ export default function Page() {
         onClose={() => setIsAiModalOpen(false)}
         params={params}
         nodalTelemetry={nodalTelemetry}
+      />
+
+      {/* Node Evidence Dossier Modal */}
+      <NodeInspectorModal
+        node={selectedNode}
+        edges={edges}
+        evidences={evidences}
+        onClose={() => setSelectedNode(null)}
+        onPromoteClaim={handlePromoteClaim}
       />
     </main>
   );

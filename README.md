@@ -119,7 +119,50 @@ npm run lint
 
 The platform presents a unified, tab-based sovereign command cockpit. The key workspaces include:
 
-### 1. Orbital Energy Grid (`nav-tab-orbital-energy`)
+### 1. Quantum Universe & Substrate Graph (`nav-tab-substrate-graph`)
+* **Interactive Dependency Graph**: Explores over 28 frontier entities across Quantum Computing, Fusion Energy, AI Infrastructure, and Advanced Semiconductors.
+* **Structural Dependency Hierarchy**: Maps destinations into critical procurement and manufacturing rails (e.g., IonQ backward into Trapped Ion Hardware, Coherent Optical Network, Superconducting Vacuum Chambers, Cryogenics, and Specialty Tooling).
+* **Node Inspector Modal**: Full evidence dossier inspects inbound/outbound edges, RAPIDS scorecards, and enables promotion of claims from `INFERENCE` to audited `OBSERVATION`.
+
+### 2. Crystal Bridge Matrix (`nav-tab-crystal-bridge`)
+* **Multi-Domain Convergence**: Identifies industrial substrate platforms that support multiple technological ecosystems simultaneously:
+  * High-Temperature Superconducting (HTS) tape bridging Fusion Tokamaks and MRI/Quantum Coils.
+  * Dilution Refrigeration (BlueFors) bridging Quantum Superconducting Qubits and Quantum Sensing.
+  * Extreme Ultra-High Vacuum (Pfeiffer) bridging Semiconductor Lithography and Trapped Ion Chambers.
+
+### 3. Aether Evidence Ledger (`nav-tab-evidence-ledger`)
+* **Audited Primary Sources**: 15+ verified primary records (SEC Form 8-K / S-4 filings, ARPA-E milestone reports, WIPO PCT patents, and Nature peer-reviewed publications).
+* **Cryptographic Hash Verification**: SHA-256 digest checks, confidence scoring, dispute flags, and auditor assignments (Jemma, Hermes, Operator).
+
+### 4. Octagon Governance & Fails-Closed Stop Conditions (`nav-tab-octagon-governance`)
+* **Automated Audit Sweeps**: Continuous graph inspection enforcing 4 strict governance stop conditions:
+  1. `STP-MISSING-PROVENANCE`: Traversal halted when claims lack verified evidence bindings.
+  2. `STP-UNVERIFIED-EDGE`: Edge dependencies without primary citations are quarantined.
+  3. `STP-MATERIAL-CONFLICT`: Disputed evidence triggers mandatory Operator review.
+  4. `STP-UNVERIFIED-GATE`: Corporate transactions claiming `TRADING_LIVE` without filing audit are demoted.
+* **Agent Permission Boundary**: Preserves strict separation between Operator, Octagon, Claudia, Hermes, Aether, Jemma, Delta, and Simon.
+
+### 5. RAPIDS Centrality Lens (`nav-tab-rapids-centrality`)
+* **7-Dimensional Scoring**: Evaluates entities on:
+  * Cash Flow ($CF$)
+  * Ecosystem Position ($EP$)
+  * Capital Intensity ($CI$)
+  * Government Exposure ($GC$)
+  * AI Integration ($AI$)
+  * Supply-Chain Importance ($SC$)
+  * Scientific Leadership ($SL$)
+* **Topological Centrality**: Correlates composite deciles against PageRank (recursive influence) and Betweenness Centrality (single-point bottleneck vulnerability).
+
+### 6. Transaction Gates Pipeline (`nav-tab-transaction-gates`)
+* **De-SPAC & Corporate Governance**: Tracks transition stages:
+  $$\text{RUMOURED} \longrightarrow \text{ANNOUNCED} \longrightarrow \text{FILED} \longrightarrow \text{APPROVED} \longrightarrow \text{CLOSED} \longrightarrow \text{TRADING\_LIVE}$$
+* **Audit Checklists**: Enforces regulatory verification before capital allocation.
+
+### 7. Systematic $G_n$ Topology Benchmark (`nav-tab-geometry-benchmark`)
+* **Controlled Baseline**: Simulates regular polygon geometries ($G_3 \dots G_\infty$) with calibrated circumradius $R$, elevation $z_0$, and input power $P_{\text{in}}$.
+* **Nearest Chord Ratio & Poynting Flux**: Quantifies chord sync ($c_6 = R$ for hexagonal symmetry) and flux throughput efficiency ($\eta$).
+
+### 8. Orbital Energy Grid (`nav-tab-orbital-energy`)
 * **Orbital Selection**: Toggle between Geostationary Orbit (**GEO**, $d\theta/dt \approx 0$, invariant pointing lock) and Low Earth Orbit (**LEO**, dynamic slew, high Doppler shift).
 * **Carrier Frequency Tuning**: Test 2.45 GHz (deep rain penetration), 5.8 GHz (balanced aperture), 35.0 GHz (Ka-band), and 94.0 GHz (millimeter-wave atmospheric window).
 * **Phase Coherence Simulation**: Simulate constructive phased-array alignment vs. stochastic phase jitter to observe wavefront collapse.
